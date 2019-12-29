@@ -1,0 +1,86 @@
+
+Private Sub Workbook_Open()
+    Sheets("customer_master").Select
+            Dim ID As Integer
+            Dim num As String
+            Dim balance_new As Double
+            Dim balance_old As Double
+            Dim next_bill_new As Date
+            Dim next_bill_old As Date
+            Dim refer_new As Double
+            Dim refer_old As Double
+            Dim Month As Integer
+            Dim C_date, A_date, E_date, B_date As Date
+            
+    C_date = Format(Date, "dd/mm/yyyy")
+    Cells(1, 8).Value = C_date
+    
+    If Sheets("customer_master").AutoFilterMode Then
+        Sheets("customer_master").AutoFilterMode = False
+    End If
+
+    LastRow = Range("A1000000").End(xlUp).Row
+    Worksheets("customer_master").CheckBox2.Value = False
+    Range("$A$11:$L$" & LastRow + 1).AutoFilter
+    Worksheets("customer_master").AutoFilter.Sort.SortFields.Add2 _
+        Key:=Range("$A$11:$A$" & LastRow), SortOn:=xlSortOnValues, Order:=xlAscending, _
+        DataOption:=xlSortNormal
+    With ActiveWorkbook.Worksheets("customer_master").AutoFilter.Sort
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    
+    
+     For i = 12 To LastRow
+             If Cells(i, 11).Value = 0 Then
+                 Cells(i, 12).Value = "Yes"
+             End If
+                A_date = Format(Cells(i, 8).Value, "dd/mm/yyyy")
+                B_date = Format(Cells(i, 9).Value, "dd/mm/yyyy")
+                E_date = Format(Cells(i, 10).Value, "dd/mm/yyyy")
+                If (B_date < C_date) And (C_date <= E_date) And (Cells(i, 12).Value <> "Yes") Then
+                    ID = Cells(i, 1).Value
+                    num = Cells(i, 2).Value
+                    balance_old = Cells(i, 6).Value
+                    next_bill_old = Cells(i, 9).Value
+                    'refer_old = Cells(i, 11).Value
+                    
+                    Month = DateDiff("d", B_date, C_date) \ 28 + 1
+                    
+                    Cells(i, 9).Value = Format(DateAdd("d", 28 * Month, B_date), "dd/mm/yyyy")
+                    'Cells(i, 11).Value = Cells(i, 11).Value - Cells(i, 5).Value * Month
+                    'If Cells(i, 11).Value < 0 Then
+                    '    Cells(i, 11).Value = 0
+                    'End If
+                    Cells(i, 6).Value = Cells(i, 6).Value - Cells(i, 5).Value * Month
+                    If Cells(i, 6).Value < 0 Then
+                        Cells(i, 6).Value = 0
+                    End If
+                    
+                    balance_new = Cells(i, 6).Value
+                    next_bill_new = Cells(i, 9).Value
+                    'refer_new = Cells(i, 11).Value
+                    
+                    Sheets("Update_history").Select
+                    LastRow_his = Range("A1000000").End(xlUp).Row
+
+                    Cells(LastRow_his + 1, 1).Value = ID
+                    Cells(LastRow_his + 1, 2).Value = num
+                    Cells(LastRow_his + 1, 3).Value = Date
+                    Cells(LastRow_his + 1, 4).Value = "SYS"
+                    Cells(LastRow_his + 1, 5).Value = balance_new
+                    Cells(LastRow_his + 1, 6).Value = balance_old
+                    
+                                      
+                    Cells(LastRow_his + 1, 7).Value = next_bill_new
+                    Cells(LastRow_his + 1, 8).Value = next_bill_old
+                    'Cells(LastRow_his + 1, 9).Value = refer_new
+                    'Cells(LastRow_his + 1, 10).Value = refer_old
+                    Cells(LastRow_his + 1, 11).Value = "Open"
+                    Sheets("customer_master").Select
+                End If
+            Next
+End Sub
